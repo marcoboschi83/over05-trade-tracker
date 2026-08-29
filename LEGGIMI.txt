@@ -1,0 +1,26 @@
+VERSIONE 2 — OVER 0,5 TRADE TRACKER
+
+NOVITA'
+- Puoi scegliere manualmente quale stake usare per ogni trade.
+- Ogni stake mantiene il proprio valore/progressione.
+- Una LOSS chiede quali 2 stake unire in modalità normale.
+- In recupero, una LOSS chiede quali 4 stake unire.
+- Gli stake uniti prendono un nome composto, es. Stake 1-2.
+- Gli stake coinvolti nella fusione vengono segnati come 'fuso'; lo stake che ha perso diventa 'zero'.
+- Una WIN aumenta lo stake del 10%, arrotondato all'euro.
+- Quando un composito raggiunge almeno 30 €, viene splittato nei suoi stake originari e il recupero termina.
+- Sono presenti tabella dei valori correnti e report completo.
+
+IMPORTANTE
+La logica di fusione/split è una prima implementazione della descrizione fornita. Prima di usarla con denaro reale conviene testare 5-10 sequenze reali del tuo Excel, soprattutto il caso LOSS durante il recupero.
+
+PARTITE PRECOMPILATE
+L'app legge matches.json nella stessa cartella. Basta sostituire quel file con un array JSON di partite, ad esempio:
+[
+  "Milan - Venezia",
+  "Chelsea - Brighton"
+]
+In questo modo l'app può proporre le partite qualificate nel campo Partita.
+
+CHATGPT PLUS + NAS
+ChatGPT Plus da solo non permette all'app HTML sul NAS di ricevere automaticamente le partite. Per farlo in automatico serve un flusso esterno: una fonte dati/API o uno script che aggiorni matches.json sul NAS. Possiamo costruire anche quello, preferibilmente con strumenti gratuiti, dopo aver definito esattamente la lista delle partite qualificate.
