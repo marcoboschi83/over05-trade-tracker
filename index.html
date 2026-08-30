@@ -1,157 +1,38 @@
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<link rel="manifest" href="manifest.json">
-<title>Over 0,5 Trade Tracker</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:Arial,sans-serif}
-.app{max-width:760px;margin:auto;padding:14px}.card{background:#fff;border-radius:16px;padding:15px;margin:0 0 12px;box-shadow:0 2px 10px #0001}
-h1{font-size:23px;margin:2px 0 14px}h2{font-size:17px;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat{background:#f9fafb;border-radius:12px;padding:10px}
-.label,.muted{font-size:12px;color:#6b7280}.value{font-size:20px;font-weight:700;margin-top:3px}
-select,input,button{width:100%;font-size:16px;padding:12px;border-radius:10px;border:1px solid #d1d5db}
-button{border:0;background:#111827;color:#fff;font-weight:700}button.secondary{background:#e5e7eb;color:#111827}
-button.win{background:#15803d}button.loss{background:#b91c1c}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.next{text-align:center;font-size:31px;font-weight:800;margin:5px}.normal{background:#ecfdf5}.recovery{background:#fff7ed}
-.stakes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.stake{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fafafa}
-.stake .id{font-weight:800}.stake .amount{font-size:21px;font-weight:800;margin:5px 0}.zero{color:#9ca3af}.active{border-left:5px solid #111827}
-.badge{display:inline-block;padding:3px 7px;border-radius:99px;background:#e5e7eb;font-size:11px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #e5e7eb;text-align:left}th{font-size:11px;color:#6b7280}
-.right{text-align:right}.positive{color:#15803d;font-weight:700}.negative{color:#b91c1c;font-weight:700}
-.hidden{display:none}.scroll{overflow:auto}.hint{background:#fffbeb;padding:9px;border-radius:10px;font-size:12px;color:#92400e}
-@media(max-width:430px){.stakes{grid-template-columns:1fr 1fr}.value{font-size:18px}}
-</style>
-</head>
-<body><div class="app">
-<h1>⚽ Over 0,5 — Trade Tracker</h1>
-
-<div class="card"><div class="grid">
-<div class="stat"><div class="label">Budget iniziale</div><div class="value" id="initial">€100,00</div></div>
-<div class="stat"><div class="label">Budget attuale</div><div class="value" id="budget">€100,00</div></div>
-<div class="stat"><div class="label">Profitto totale</div><div class="value" id="profit">€0,00</div></div>
-<div class="stat"><div class="label">Weekend</div><div class="value" id="weekend">1</div></div>
-</div></div>
-
-<div id="status" class="card normal"><h2>Stato</h2><div id="mode"><b>🟢 NORMALE</b></div>
-<div class="next" id="next">€10</div><div class="muted" id="detail">Seleziona lo stake che vuoi usare.</div></div>
-
-<div class="card"><h2>Nuovo trade</h2>
-<input id="match" placeholder="Partita (es. Milan - Venezia)" list="matchList">
-<datalist id="matchList"></datalist>
-<div style="height:8px"></div>
-<select id="stakeSelect"></select>
-<div class="muted" style="margin:7px 0">Quota fissa 1,11 · WIN = +10% dello stake, arrotondato all'euro.</div>
-<div class="buttons"><button class="win" onclick="record('WIN')">✅ WIN</button><button class="loss" onclick="record('LOSS')">❌ LOSS</button></div>
-</div>
-
-<div class="card"><h2>Valore attuale dei singoli stake</h2><div class="stakes" id="stakes"></div></div>
-
-<div class="card"><h2>Report completo degli stake</h2><div class="scroll"><table><thead><tr><th>Stake</th><th>Stato</th><th>Valore</th><th>Trade</th><th>P/L</th></tr></thead><tbody id="report"></tbody></table></div></div>
-
-<div class="card"><h2>Storico trade</h2><div id="empty" class="muted">Nessun trade.</div><div class="scroll"><table id="history" class="hidden"><thead><tr><th>#</th><th>Partita</th><th>Stake</th><th>Esito</th><th class="right">P/L</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
-
-<div class="card"><h2>Weekend / dati</h2>
-<div class="buttons"><button class="secondary" onclick="newWeekend()">📅 Nuovo weekend</button><button class="secondary" onclick="undo()">↩ Annulla ultimo</button></div>
-<div style="height:9px"></div><div class="buttons"><button class="secondary" onclick="backup()">💾 Backup</button><button class="secondary" onclick="document.getElementById('file').click()">📥 Ripristina</button></div>
-<input id="file" type="file" accept=".json" class="hidden" onchange="restore(event)">
-<div style="height:9px"></div><button class="secondary" onclick="reloadMatches()">🔄 Ricarica partite qualificate</button>
-<div class="hint" style="margin-top:9px">Le partite possono essere precompilate leggendo un file <b>matches.json</b> pubblicato insieme all'app. Vedi LEGGIMI.</div>
-<div style="height:9px"></div><button class="loss" onclick="resetAll()">⚠️ Azzera tutto</button>
-</div>
-</div>
-
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.json"><title>Over 0,5 Trade Tracker V3</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}.app{max-width:900px;margin:auto;padding:14px}h1{font-size:23px}.card{background:#fff;border-radius:15px;padding:15px;margin:12px 0;box-shadow:0 2px 10px #0001}h2{font-size:18px;margin:0 0 10px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#f9fafb;padding:10px;border-radius:10px}.label,.muted{font-size:12px;color:#6b7280}.value{font-size:20px;font-weight:700;margin-top:4px}.normal{background:#ecfdf5}.recovery{background:#fff7ed}.next{text-align:center;font-size:28px;font-weight:800;margin:7px}input,select,button{width:100%;padding:11px;border-radius:9px;border:1px solid #d1d5db;font-size:15px}button{background:#111827;color:white;border:0;font-weight:700}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.win{background:#15803d}.loss,.danger{background:#b91c1c}.secondary{background:#e5e7eb;color:#111827}.hidden{display:none}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:7px 4px;border-bottom:1px solid #e5e7eb;text-align:left}th{font-size:11px;color:#6b7280}.right{text-align:right}.positive{color:#15803d;font-weight:700}.negative{color:#b91c1c;font-weight:700}.stakegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stake{border:1px solid #e5e7eb;border-radius:10px;padding:10px}.group{background:#fff7ed}.match{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:7px 0}.matchline{display:flex;justify-content:space-between;gap:8px}.match button{width:auto;padding:7px 10px}@media(min-width:650px){.stakegrid{grid-template-columns:repeat(5,1fr)}}
+</style></head><body><div class="app"><h1>⚽ Over 0,5 — Trade Tracker V3</h1>
+<div class="card"><div class="grid"><div class="stat"><div class="label">Budget iniziale</div><div class="value" id="initial"></div></div><div class="stat"><div class="label">Budget attuale</div><div class="value" id="budget"></div></div><div class="stat"><div class="label">Profitto totale</div><div class="value" id="profit"></div></div><div class="stat"><div class="label">Weekend</div><div class="value" id="weekend"></div></div></div></div>
+<div class="card" id="status"><h2>Stato</h2><div id="mode"></div><div class="next" id="chosen">Seleziona uno stake</div><div class="muted" id="statusText"></div></div>
+<div class="card"><h2>📋 Partite qualificate</h2><div class="muted">Le partite vengono lette da <b>matches.json</b>. Puoi sostituire quel file ogni weekend senza toccare lo storico.</div><div id="matches"></div></div>
+<div class="card"><h2>➕ Registra trade</h2><input id="match" placeholder="Partita"><div style="height:8px"></div><select id="stake"></select><div style="height:8px"></div><div class="row"><button class="win" onclick="registerResult('WIN')">✅ WIN</button><button class="loss" onclick="registerResult('LOSS')">❌ LOSS</button></div><div id="fusion"></div></div>
+<div class="card"><h2>💰 Valore attuale degli stake</h2><div class="stakegrid" id="currentStakes"></div></div>
+<div class="card"><h2>📊 Report completo</h2><div style="overflow:auto"><table><thead><tr><th>#</th><th>Weekend</th><th>Stake</th><th>Partita</th><th>Valore</th><th>Esito</th><th>P/L</th></tr></thead><tbody id="report"></tbody></table></div></div>
+<div class="card"><h2>📅 Storico weekend</h2><div id="history" class="muted"></div></div>
+<div class="card"><h2>⚙️ Gestione</h2><div class="row"><button class="secondary" onclick="newWeekend()">📅 Nuovo weekend</button><button class="secondary" onclick="backup()">💾 Backup</button></div><div style="height:8px"></div><div class="row"><button class="secondary" onclick="document.getElementById('file').click()">📥 Ripristina</button><button class="danger" onclick="resetAll()">⚠️ Azzera tutto</button></div><input id="file" type="file" accept=".json" class="hidden" onchange="restore(event)"></div></div>
 <script>
-const KEY="over05TrackerV2", N=10, INITIAL=100, NORMAL=10, RATE=.10, SPLIT=30;
-let d=load();
-function fresh(){
- const stakes={}; for(let i=1;i<=N;i++) stakes[i]={id:String(i),value:10,status:"attivo",trades:0,pl:0};
- return {initial:INITIAL,budget:INITIAL,weekend:1,weekendStart:INITIAL,stakes,trades:[],recovery:false,history:[]};
-}
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}}
-function save(){localStorage.setItem(KEY,JSON.stringify(d))}
-function money(x){return "€"+Number(x).toFixed(2).replace(".",",")}
-function roundEuro(x){return Math.round(x)}
-function activeStakeIds(){return Object.values(d.stakes).filter(s=>s.status==="attivo").map(s=>s.id)}
-function stakeValue(id){return d.stakes[id]?.value||0}
-
-function render(){
- document.getElementById("initial").textContent=money(d.initial);
- document.getElementById("budget").textContent=money(d.budget);
- let p=d.budget-d.initial; let pe=document.getElementById("profit");pe.textContent=(p>=0?"+":"")+money(p);pe.className="value "+(p>=0?"positive":"negative");
- document.getElementById("weekend").textContent=d.weekend;
- let sel=document.getElementById("stakeSelect"); let old=sel.value;
- sel.innerHTML=Object.values(d.stakes).map(s=>`<option value="${esc(s.id)}" ${s.status!=="attivo"?"disabled":""}>Stake ${esc(s.id)} — ${money(s.value)} — ${s.status}</option>`).join("");
- if([...sel.options].some(o=>o.value===old&&!o.disabled)) sel.value=old;
- let chosen=sel.value; let next=chosen?stakeValue(chosen):10;
- document.getElementById("next").textContent=money(next).replace(",00","");
- document.getElementById("detail").textContent=d.recovery?"🔴 Recupero attivo. Una LOSS in recupero richiede l'unione di 4 stake.":"Seleziona lo stake che vuoi usare.";
- document.getElementById("mode").innerHTML=d.recovery?"<b>🔴 RECUPERO</b>":"<b>🟢 NORMALE</b>";
- document.getElementById("status").className="card "+(d.recovery?"recovery":"normal");
- document.getElementById("stakes").innerHTML=Object.values(d.stakes).map(s=>`<div class="stake ${s.status==="attivo"?"active":""}">
-   <div class="id">Stake ${esc(s.id)}</div><div class="amount ${s.value===0?"zero":""}">${money(s.value)}</div>
-   <span class="badge">${esc(s.status)}</span></div>`).join("");
- document.getElementById("report").innerHTML=Object.values(d.stakes).map(s=>`<tr><td><b>${esc(s.id)}</b></td><td>${esc(s.status)}</td><td>${money(s.value)}</td><td>${s.trades}</td><td class="${s.pl>=0?"positive":"negative"}">${s.pl>=0?"+":""}${money(s.pl)}</td></tr>`).join("");
- let hb=document.getElementById("historyBody");hb.innerHTML=d.trades.map(t=>`<tr><td>${t.no}</td><td>${esc(t.match)}</td><td>${esc(t.stake)}</td><td>${t.result==="WIN"?"✅ WIN":"❌ LOSS"}</td><td class="right ${t.pl>=0?"positive":"negative"}">${t.pl>=0?"+":""}${money(t.pl)}</td></tr>`).join("");
- document.getElementById("empty").classList.toggle("hidden",d.trades.length>0);document.getElementById("history").classList.toggle("hidden",d.trades.length===0);
-}
-
-function record(result){
- const match=document.getElementById("match").value.trim()||"Partita non specificata";
- const id=document.getElementById("stakeSelect").value;if(!id){alert("Seleziona uno stake.");return}
- const s=d.stakes[id]; if(!s||s.status!=="attivo"){alert("Questo stake non è attivo.");return}
- const stake=s.value;
- if(result==="LOSS"){
-   const count=d.recovery?4:2;
-   const available=activeStakeIds().filter(x=>x!==id);
-   if(available.length<count){alert("Non ci sono abbastanza stake attivi da unire.");return}
-   const answer=prompt(`LOSS su Stake ${id}. Inserisci ${count} numeri di stake da unire, separati da virgola.\nEsempio: ${available.slice(0,count).join(",")}`);
-   if(!answer)return;
-   const ids=answer.split(",").map(x=>x.trim()).filter(Boolean);
-   if(ids.length!==count||new Set(ids).size!==count||ids.includes(id)||ids.some(x=>!d.stakes[x]||d.stakes[x].status!=="attivo")){
-     alert("Selezione non valida.");return;
-   }
-   // La perdita azzera lo stake che ha perso. Gli stake scelti vengono fusi in un nuovo stake composito.
-   s.value=0;s.status="zero";s.trades++;s.pl-=stake;
-   let total=0;ids.forEach(x=>{total+=d.stakes[x].value;d.stakes[x].status="fuso";});
-   const composite=ids.slice().sort((a,b)=>Number(a)-Number(b)).join("-");
-   // Se esiste già un composito con quel nome, aggiungiamo il valore; altrimenti creiamo una posizione virtuale.
-   d.stakes[composite]={id:composite,value:roundEuro(total),status:"attivo",trades:0,pl:0,parts:ids};
-   d.budget-=stake;d.recovery=true;
-   d.trades.push({no:d.trades.length+1,match,stakeId:id,stake:"Stake "+id,amount:stake,result,pl:-stake,action:`Uniti ${ids.join(" & ")} → Stake ${composite}`});
- } else {
-   const profit=roundEuro(stake*RATE);d.budget+=profit;s.value=stake+profit;s.trades++;s.pl+=profit;
-   d.trades.push({no:d.trades.length+1,match,stakeId:id,stake:"Stake "+id,amount:stake,result,pl:profit,action:"WIN"});
-   if(d.recovery && s.value>=SPLIT){
-     splitComposite(s);
-   }
- }
- document.getElementById("match").value="";save();render();
-}
-
-function splitComposite(s){
- const parts=s.parts||s.id.split("-");
- const total=s.value;
- delete d.stakes[s.id];
- const each=Math.round(total/parts.length);
- parts.forEach((id,i)=>{d.stakes[id]={id,value:each,status:"attivo",trades:0,pl:0};});
- d.recovery=false;
-}
-
-function undo(){alert("Per mantenere il motore semplice e sicuro, l'annullamento verrà completato nella prossima revisione dopo aver definito tutti i casi di fusione/split.");}
-function newWeekend(){if(!confirm("Nuovo weekend? Lo storico rimane salvato."))return;d.weekend++;d.weekendStart=d.budget;d.trades=[];d.recovery=false;for(let i=1;i<=N;i++)d.stakes[i]={id:String(i),value:10,status:"attivo",trades:0,pl:0};save();render()}
-function backup(){let b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="over05-backup.json";a.click()}
-function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{d=JSON.parse(r.result);save();render();alert("Backup ripristinato.")}catch(x){alert("Backup non valido.")}};r.readAsText(f)}
-function resetAll(){if(confirm("Cancellare tutto e tornare a €100?")){d=fresh();save();render()}}
-function esc(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-async function reloadMatches(){
- try{let r=await fetch("matches.json?"+Date.now());if(!r.ok)throw 0;let m=await r.json();document.getElementById("matchList").innerHTML=m.map(x=>`<option value="${esc(x)}">`).join("");alert(m.length+" partite caricate.");}
- catch(e){alert("matches.json non trovato. Puoi aggiungerlo nella stessa cartella dell'app.");}
-}
-render();reloadMatches();
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-</script>
-</body></html>
+const KEY='over05-v3', INITIAL=100, NORMAL=10, RATE=.10;
+let data=load(), matches=[];
+function fresh(){return{initialBudget:INITIAL,budget:INITIAL,weekend:1,weekendStart:INITIAL,stakes:Array.from({length:10},(_,i)=>({id:String(i+1),name:'Stake '+(i+1),value:10,status:'active',trades:0,pl:0})),groups:[],trades:[],weekends:[]}}
+function load(){try{let d=JSON.parse(localStorage.getItem(KEY));return d&&d.stakes?d:fresh()}catch(e){return fresh()}}function save(){localStorage.setItem(KEY,JSON.stringify(data))}function eur(n){return '€'+Number(n).toFixed(2).replace('.',',')}function round(n){return Math.round(n)}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function active(){return data.stakes.filter(s=>s.status==='active')}function groupActive(){return data.stakes.filter(s=>s.status==='group'&&data.groups.some(g=>g.id===s.groupId&&g.active))}
+function render(){document.getElementById('initial').textContent=eur(data.initialBudget);document.getElementById('budget').textContent=eur(data.budget);let p=data.budget-data.initialBudget;document.getElementById('profit').textContent=(p>=0?'+':'')+eur(p);document.getElementById('profit').className='value '+(p>=0?'positive':'negative');document.getElementById('weekend').textContent=data.weekend;renderSelect();renderStakes();renderReport();renderHistory();let id=document.getElementById('stake').value,s=data.stakes.find(x=>x.id===id);document.getElementById('chosen').textContent=s?s.name+' · '+eur(s.value):'Seleziona uno stake';let ga=groupActive().length;document.getElementById('mode').innerHTML=ga?'<b>🟠 RECUPERO</b>':'<b>🟢 NORMALE</b>';document.getElementById('status').className='card '+(ga?'recovery':'normal');document.getElementById('statusText').textContent=ga?'È attiva una o più fusioni. Una WIN aumenta il gruppo del 10% arrotondato all’euro; il raggiungimento del target chiude e splitta.':'Ogni stake è indipendente. Dopo una LOSS puoi scegliere gli stake da fondere.'}
+function renderSelect(){let el=document.getElementById('stake'),old=el.value,opts=[];active().forEach(s=>opts.push(`<option value="${esc(s.id)}">${esc(s.name)} — ${eur(s.value)}</option>`));groupActive().forEach(s=>opts.push(`<option value="${esc(s.id)}">${esc(s.name)} — ${eur(s.value)}</option>`));el.innerHTML=opts.join('');if(opts.length&&[...el.options].some(o=>o.value===old))el.value=old}
+function renderStakes(){let a=[...active(),...groupActive()];document.getElementById('currentStakes').innerHTML=a.map(s=>`<div class="stake ${s.status==='group'?'group':''}"><b>${esc(s.name)}</b><div>${eur(s.value)}</div><span class="muted">${s.trades} trade · ${s.pl>=0?'+':''}${eur(s.pl)}</span></div>`).join('')||'<div class="muted">Nessuno stake attivo.</div>'}
+function renderReport(){document.getElementById('report').innerHTML=data.trades.map(t=>`<tr><td>${t.no}</td><td>${t.weekend}</td><td><b>${esc(t.stake)}</b></td><td>${esc(t.match)}</td><td>${eur(t.value)}</td><td>${t.result==='WIN'?'✅ WIN':t.result==='LOSS'?'❌ LOSS':t.result}</td><td class="${t.pl>=0?'positive':'negative'}">${t.pl>=0?'+':''}${eur(t.pl)}</td></tr>`).join('')}
+function renderHistory(){let a=[...(data.weekends||[])];a.push({no:data.weekend,trades:data.trades,start:data.weekendStart,budgetEnd:data.budget});document.getElementById('history').innerHTML=a.map(w=>{let p=w.budgetEnd-w.start;return `<div style="padding:7px 0;border-bottom:1px solid #eee"><b>Weekend ${w.no}</b> · ${w.trades.length} trade · P/L <span class="${p>=0?'positive':'negative'}">${p>=0?'+':''}${eur(p)}</span></div>`}).join('')}
+function addRecord(stake,match,value,result,pl,extra={}){data.trades.push({no:data.trades.length+1,weekend:data.weekend,stake,match,value,result,pl,time:new Date().toISOString(),...extra})}
+function registerResult(result){let id=document.getElementById('stake').value,s=data.stakes.find(x=>x.id===id);if(!s)return;let g=s.status==='group'?data.groups.find(x=>x.id===s.groupId&&x.active):null;if(g){registerGroup(g,result);return}let match=document.getElementById('match').value.trim()||'Partita non specificata';if(result==='LOSS'){showFusion(s,match);return}let before=s.value,pl=round(before*RATE);s.value+=pl;s.trades++;s.pl+=pl;data.budget+=pl;addRecord(s.name,match,before,'WIN',pl);document.getElementById('match').value='';save();render()}
+function showFusion(loser,match){let candidates=active().filter(s=>s.id!==loser.id);document.getElementById('fusion').innerHTML=`<div class="card" style="margin:10px 0;background:#fff7ed"><b>${esc(loser.name)} = LOSS</b><div class="muted" style="margin:5px 0">Seleziona gli stake da usare per il recupero. Lo stake perso viene incluso automaticamente nel gruppo.</div>${candidates.map(s=>`<label style="display:block;padding:5px"><input type="checkbox" value="${esc(s.id)}" style="width:auto"> ${esc(s.name)} — ${eur(s.value)}</label>`).join('')}<div style="height:6px"></div><button onclick="confirmFusion('${esc(loser.id)}','${esc(match)}')">Fondi</button></div>`}
+function confirmFusion(loserId,match){let ids=[...document.querySelectorAll('#fusion input:checked')].map(x=>x.value);if(!ids.length){alert('Seleziona almeno uno stake da fondere.');return}let loser=data.stakes.find(s=>s.id===loserId),members=[loserId,...ids],contributors=data.stakes.filter(s=>ids.includes(s.id));let contributed=contributors.reduce((a,s)=>a+s.value,0),target=contributed+loser.value;let name=members.join('-');contributors.forEach(s=>s.status='fused');loser.status='fused';let group={id:'G'+Date.now(),name:'Stake '+name,members,initial:round(contributed),target:round(target),value:round(contributed),active:true,trades:0,pl:0,match};data.groups.push(group);data.stakes.push({id:group.id,name:group.name,value:group.value,status:'group',trades:0,pl:0,groupId:group.id});addRecord(group.name,match,group.value,'FUSIONE',0,{members,lossStake:loserId,target:group.target});document.getElementById('fusion').innerHTML='';save();render()}
+function registerGroup(g,result){let match=document.getElementById('match').value.trim()||g.match||'Partita non specificata';let s=data.stakes.find(x=>x.groupId===g.id&&x.status==='group');if(result==='LOSS'){showRecoveryFusion(g,match);return}let before=g.value,pl=round(before*RATE);g.value+=pl;g.trades++;g.pl+=pl;data.budget+=pl;addRecord(g.name,match,before,'WIN',pl,{groupId:g.id,target:g.target});if(g.value>=g.target)splitGroup(g,match);document.getElementById('match').value='';save();render()}
+function showRecoveryFusion(g,match){let candidates=active();if(candidates.length<4){alert('Non ci sono 4 stake attivi disponibili per la fusione.');return}document.getElementById('fusion').innerHTML=`<div class="card" style="margin:10px 0;background:#fff7ed"><b>LOSS durante il recupero</b><div class="muted">Seleziona 4 stake da unire. Il gruppo perso resta parte del recupero e i 4 stake selezionati vengono aggiunti alla nuova fusione.</div>${candidates.map(s=>`<label style="display:block;padding:5px"><input type="checkbox" value="${esc(s.id)}" style="width:auto"> ${esc(s.name)} — ${eur(s.value)}</label>`).join('')}<button onclick="confirmRecoveryFusion('${esc(g.id)}','${esc(match)}')">Fondi 4 stake</button></div>`}
+function confirmRecoveryFusion(gid,match){let ids=[...document.querySelectorAll('#fusion input:checked')].map(x=>x.value);if(ids.length!==4){alert('Seleziona esattamente 4 stake.');return}let old=data.groups.find(g=>g.id===gid);let oldStake=data.stakes.find(s=>s.groupId===gid&&s.status==='group');let candidates=data.stakes.filter(s=>ids.includes(s.id));let contributed=candidates.reduce((a,s)=>a+s.value,0);let target=round(contributed+old.value);candidates.forEach(s=>s.status='fused');if(oldStake)oldStake.status='fused';old.active=false;let members=[...old.members,...ids],name=members.join('-');let ng={id:'G'+Date.now(),name:'Stake '+name,members,initial:round(contributed),target,value:round(contributed),active:true,trades:0,pl:0,match};data.groups.push(ng);data.stakes.push({id:ng.id,name:ng.name,value:ng.value,status:'group',trades:0,pl:0,groupId:ng.id});addRecord(ng.name,match,ng.value,'FUSIONE 4',0,{members,target:ng.target,previousGroup:gid});document.getElementById('fusion').innerHTML='';save();render()}
+function splitGroup(g,match){let share=round(g.value/g.members.length);g.members.forEach(id=>{let s=data.stakes.find(x=>x.id===id);if(s){s.status='active';s.value=share;s.trades=0;s.pl=0}});let gs=data.stakes.find(s=>s.groupId===g.id);if(gs)gs.status='closed';g.active=false;addRecord('SPLIT '+g.name,match,g.value,'SPLIT',0,{members:g.members,share})}
+function newWeekend(){if(!confirm('Chiudere il weekend e iniziarne uno nuovo?'))return;data.weekends.push({no:data.weekend,trades:data.trades,start:data.weekendStart,budgetEnd:data.budget});data.weekend++;data.weekendStart=data.budget;data.trades=[];save();render()}
+function backup(){let b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='over05-backup.json';a.click()}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();render();alert('Backup ripristinato.')}catch(x){alert('File non valido.')}};r.readAsText(f)}
+function resetAll(){if(confirm('Cancellare tutto e tornare a €100?')){data=fresh();save();render()}}
+async function loadMatches(){try{let r=await fetch('matches.json',{cache:'no-store'});if(!r.ok)throw 0;matches=await r.json();if(!Array.isArray(matches))matches=[]}catch(e){matches=[]}document.getElementById('matches').innerHTML=matches.length?matches.map((m,i)=>{let name=m.match||m.partita||((m.home||'')+' - '+(m.away||''));return `<div class="match"><div class="matchline"><b>${esc(name)}</b><button onclick="useMatch(${i})">Usa</button></div><div class="muted">${esc(m.league||m.campionato||'')} ${esc(m.date||m.data||'')} ${esc(m.time||m.ora||'')}</div></div>`}).join(''):'<div class="muted" style="margin-top:8px">Nessuna partita nel matches.json.</div>'}
+function useMatch(i){let m=matches[i];document.getElementById('match').value=m.match||m.partita||((m.home||'')+' - '+(m.away||''));window.scrollTo({top:document.getElementById('match').getBoundingClientRect().top+scrollY-80,behavior:'smooth'})}
+document.getElementById('stake').addEventListener('change',render);render();loadMatches();
+</script></body></html>

@@ -1,26 +1,29 @@
-VERSIONE 2 — OVER 0,5 TRADE TRACKER
+OVER 0,5 — TRADE TRACKER V3
 
-NOVITA'
-- Puoi scegliere manualmente quale stake usare per ogni trade.
-- Ogni stake mantiene il proprio valore/progressione.
-- Una LOSS chiede quali 2 stake unire in modalità normale.
-- In recupero, una LOSS chiede quali 4 stake unire.
-- Gli stake uniti prendono un nome composto, es. Stake 1-2.
-- Gli stake coinvolti nella fusione vengono segnati come 'fuso'; lo stake che ha perso diventa 'zero'.
-- Una WIN aumenta lo stake del 10%, arrotondato all'euro.
-- Quando un composito raggiunge almeno 30 €, viene splittato nei suoi stake originari e il recupero termina.
-- Sono presenti tabella dei valori correnti e report completo.
+CARICA TUTTI I FILE NELLO STESSO REPOSITORY:
+- index.html
+- manifest.json
+- sw.js
+- matches.json
 
-IMPORTANTE
-La logica di fusione/split è una prima implementazione della descrizione fornita. Prima di usarla con denaro reale conviene testare 5-10 sequenze reali del tuo Excel, soprattutto il caso LOSS durante il recupero.
+IMPORTANTE: aprire index.html con doppio clic (file://) può impedire la lettura di matches.json. La lettura corretta avviene quando l'app è pubblicata via HTTPS, ad esempio GitHub Pages.
 
-PARTITE PRECOMPILATE
-L'app legge matches.json nella stessa cartella. Basta sostituire quel file con un array JSON di partite, ad esempio:
+LOGICA V3:
+- 10 stake iniziali da 10 €.
+- Ogni stake è indipendente.
+- Lo stake usato per il trade viene scelto manualmente.
+- WIN: +10% del valore, arrotondato all'euro.
+- LOSS: lo stake perde il proprio valore e l'utente seleziona gli stake da usare per il recupero.
+- La fusione comprende sempre lo stake perso + gli stake selezionati.
+- Il gruppo prende il nome, per esempio, Stake 1-2-3.
+- Se S1 perde e S2+S3 sono selezionati: il gruppo parte da 20 € e il target di split è 30 € (20 € degli stake contribuenti + 10 € persi da S1).
+- Il gruppo cresce con le WIN. Quando raggiunge/supera il target, viene splittato su TUTTI gli stake originari, compreso quello che aveva perso.
+- Il gruppo viene rimosso dagli stake attuali; gli stake originari tornano attivi.
+- In caso di LOSS durante un recupero, l'app richiede esattamente 4 stake attivi da fondere con il gruppo precedente.
+- Lo storico conserva fusioni, WIN, LOSS e split.
+- matches.json è separato dallo storico e può essere sostituito ogni weekend.
+
+FORMATO matches.json:
 [
-  "Milan - Venezia",
-  "Chelsea - Brighton"
+  {"weekend":"2026-08-30","date":"2026-08-30","time":"18:00","league":"Serie A","match":"Milan - Venezia"}
 ]
-In questo modo l'app può proporre le partite qualificate nel campo Partita.
-
-CHATGPT PLUS + NAS
-ChatGPT Plus da solo non permette all'app HTML sul NAS di ricevere automaticamente le partite. Per farlo in automatico serve un flusso esterno: una fonte dati/API o uno script che aggiorni matches.json sul NAS. Possiamo costruire anche quello, preferibilmente con strumenti gratuiti, dopo aver definito esattamente la lista delle partite qualificate.
