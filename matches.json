@@ -5,5 +5,7 @@
   {"date":"2026-08-30","time":"17:15","league":"Ligue 1","home":"Rennes","away":"Le Mans"},
   {"date":"2026-08-30","time":"17:30","league":"Premier League","home":"Manchester United","away":"Ipswich"},
   {"date":"2026-08-30","time":"20:45","league":"Serie A","home":"Cagliari","away":"Inter"},
-  {"date":"2026-08-30","time":"20:45","league":"Serie A","home":"Lazio","away":"Genoa"}
+  {"date":"2026-08-30","time":"20:45","league":"Serie A","home":"Lazio","away":"Genoa"},
+  {"date":"2026-08-31","time":"18:30","league":"Serie A","home":"Lecce","away":"Roma"},
+  {"date":"2026-08-31","time":"20:00","league":"Premier League","home":"Aston Villa","away":"Arsenal"}
 ]
