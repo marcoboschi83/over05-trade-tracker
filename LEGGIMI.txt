@@ -1,25 +1,13 @@
-V4 - Over 0,5 Trade Tracker
+V5 - Over 0,5 Trade Tracker
 
-File da caricare nella root del repository:
-index.html
-manifest.json
-sw.js
-matches.json
+Sostituire i file della V4 con index.html, manifest.json, sw.js e matches.json.
 
-matches.json è separato dallo storico locale.
-
-MODIFICHE V4:
-- Esiti: WIN, LOSS, PIAZZATA, NULLA.
-- Partite selezionabili da menu a tendina alimentato da matches.json.
-- Una partita registrata viene nascosta dall'elenco sul dispositivo, ma resta nello storico.
-- WIN aggiorna la progressione; PIAZZATA e NULLA non modificano stake/budget.
-- Annulla ultima registrazione ripristina uno snapshot completo, comprese fusioni/split.
-- Logica di progressione/fusione mantenuta.
-- Al completamento del recupero, lo split riattiva TUTTI gli stake originali coinvolti, compreso quello che aveva perso.
-- Il gruppo composto viene rimosso dagli stake attuali.
-- Service worker cache versionata V4.
-
-Formato matches.json:
-[
-  {"weekend":"2026-08-30","date":"2026-08-30","time":"18:00","league":"Serie A","match":"Milan - Venezia","qualified":true}
-]
+MODIFICHE V5:
+- Rimosso il pulsante PIAZZATA.
+- Esiti: WIN, LOSS, NULLA.
+- Aggiunto PRELIEVO dalla cassa.
+- In alto: Cassa attuale, Profitto totale Trade, Totale prelevato.
+- Aggiunto grafico della cassa.
+- La logica delle progressioni/fusioni/split della V4 è mantenuta.
+- La chiave Local Storage resta quella V4 per conservare lo storico già presente sul telefono.
+- Prima di sostituire la versione reale è comunque consigliato fare Backup.
