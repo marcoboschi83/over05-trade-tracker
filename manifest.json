@@ -1,1 +1,9 @@
-{"name":"Over 0,5 Trade Tracker V5","short_name":"Over 0,5","start_url":"./","display":"standalone","background_color":"#f3f4f6","theme_color":"#111827","icons":[]}
+{
+  "name": "Over 0,5 Trade Tracker V5",
+  "short_name": "Over05 V5",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "lang": "it"
+}
