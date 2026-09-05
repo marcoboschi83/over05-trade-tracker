@@ -15,6 +15,13 @@
 <div class="stat"><div class="label">Profitto totale</div><div class="value" id="profit">€0,00</div></div>
 <div class="stat"><div class="label">Totale prelevato</div><div class="value" id="withdrawn">€0,00</div></div>
 <div class="stat"><div class="label">Weekend</div><div class="value" id="weekend">1</div></div></div></div>
+<div class="card"><h2>📊 Statistiche trade</h2><div class="grid">
+<div class="stat"><div class="label">Trade totali</div><div class="value" id="totalTrades">0</div></div>
+<div class="stat"><div class="label">WIN</div><div class="value positive" id="totalWins">0</div></div>
+<div class="stat"><div class="label">NULLA</div><div class="value" id="totalNulls">0</div></div>
+<div class="stat"><div class="label">LOSS</div><div class="value negative" id="totalLosses">0</div></div>
+<div class="stat"><div class="label">WIN + NULLA / Trade</div><div class="value" id="winNullRate">0,0%</div></div>
+</div></div>
 <div class="card" id="modeCard"><h2>Stato sistema</h2><div id="mode"><b>🟢 NORMALE</b></div><div class="next" id="selectedStake">—</div><div class="muted" id="detail">Seleziona partita e stake.</div></div>
 <div class="card"><h2>📋 Partite qualificate</h2><select id="matchSelect"><option value="">Seleziona partita...</option></select><div id="matchInfo" class="muted" style="margin-top:7px"></div></div>
 <div class="card"><h2>➕ Registra trade</h2><select id="stakeSelect"><option value="">Seleziona stake...</option></select><div style="height:9px"></div>
@@ -43,11 +50,53 @@ function normalize(d){
 }
 function loadData(){
  try{
-  const old=localStorage.getItem(KEY); if(old){const d=normalize(JSON.parse(old)); localStorage.setItem(KEY,JSON.stringify(d)); return d;}
-  for(const k of LEGACY_KEYS){const raw=localStorage.getItem(k); if(raw){const d=normalize(JSON.parse(raw)); localStorage.setItem(KEY,JSON.stringify(d)); return d;}}
+  const old=localStorage.getItem(KEY); if(old){const d=migrateV5Data(normalize(JSON.parse(old))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}
+  for(const k of LEGACY_KEYS){const raw=localStorage.getItem(k); if(raw){const d=migrateV5Data(normalize(JSON.parse(raw))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}}
  }catch(e){}
  return fresh();
 }
+
+function migrateV5Data(d){
+  // Corregge le fusioni V5 precedenti: la puntata persa NON entra nel capitale iniziale del recupero.
+  // Il suo valore resta però nel target da recuperare.
+  if(!d || !Array.isArray(d.groups)) return d;
+  d.groups.forEach(g=>{
+    if(!Array.isArray(g.members)||g.members.length<2||!Array.isArray(g.originalValues)) return;
+    const all=g.originalValues.reduce((a,x)=>a+(Number(x.value)||0),0);
+    const first=g.originalValues.find(x=>String(x.id)===String(g.members[0]));
+    if(!first) return;
+    const survivor=all-(Number(first.value)||0);
+    // Vecchia V5: value=all e target=all. Nuova V5: value=survivor e target=all.
+    if(Math.abs(Number(g.value)-all)<0.001 && Math.abs(Number(g.target)-all)<0.001){
+      g.value=roundEuro(survivor);
+      g.target=roundEuro(all);
+      g.lossValue=roundEuro(first.value);
+      g.ruleVersion='V5.1';
+      const gs=d.stakes.find(x=>x.id===g.id);
+      if(gs) gs.value=g.value;
+    }
+  });
+  return d;
+}
+function allTradeRecords(){
+  const out=[];
+  (data.weekends||[]).forEach(w=>{if(Array.isArray(w.trades)) out.push(...w.trades);});
+  if(Array.isArray(data.trades)) out.push(...data.trades);
+  return out;
+}
+function renderStats(){
+  const ts=allTradeRecords().filter(t=>['WIN','LOSS','NULLA'].includes(t.result));
+  const wins=ts.filter(t=>t.result==='WIN').length;
+  const nulls=ts.filter(t=>t.result==='NULLA').length;
+  const losses=ts.filter(t=>t.result==='LOSS').length;
+  const rate=ts.length?((wins+nulls)/ts.length*100):0;
+  document.getElementById('totalTrades').textContent=ts.length;
+  document.getElementById('totalWins').textContent=wins;
+  document.getElementById('totalNulls').textContent=nulls;
+  document.getElementById('totalLosses').textContent=losses;
+  document.getElementById('winNullRate').textContent=rate.toFixed(1).replace('.',',')+'%';
+}
+
 function save(){localStorage.setItem(KEY,JSON.stringify(data));}
 function money(x){return '€'+Number(x||0).toFixed(2).replace('.',',');}
 function roundEuro(x){return Math.round(Number(x)||0);}
@@ -68,7 +117,7 @@ function renderReport(){document.getElementById('report').innerHTML=data.trades.
 function renderHistory(){let a=[...(data.weekends||[])],cur=data.trades.filter(t=>t.weekend===data.weekendNo);if(cur.length||!a.length)a.push({no:data.weekendNo,trades:cur,start:data.weekendStart,budgetEnd:data.budget});document.getElementById('weekendHistory').innerHTML=a.map(w=>{const p=(w.budgetEnd??w.start)-w.start;return `<div style="padding:8px 0;border-bottom:1px solid #eee"><b>Weekend ${w.no}</b> · ${w.trades.length} registrazioni · P/L <span class="${p>=0?'positive':'negative'}">${p>=0?'+':''}${money(p)}</span></div>`;}).join('');}
 function render(){
  document.getElementById('initial').textContent=money(data.initialBudget);document.getElementById('budget').textContent=money(data.budget);document.getElementById('withdrawn').textContent=money(data.withdrawn);const p=data.budget-data.initialBudget+data.withdrawn;const pel=document.getElementById('profit');pel.textContent=(p>=0?'+':'')+money(p);pel.className='value '+(p>=0?'positive':'negative');document.getElementById('weekend').textContent=data.weekendNo;
- renderSelect();renderStakes();renderReport();renderHistory();showMatchInfo();drawChart();
+ renderSelect();renderStakes();renderReport();renderHistory();renderStats();showMatchInfo();drawChart();
  const s=active().find(x=>x.id===document.getElementById('stakeSelect').value),g=s&&s.status==='group'?data.groups.find(x=>x.id===s.groupId&&x.active):null;document.getElementById('selectedStake').textContent=s?s.name+' · '+money(s.value):'—';document.getElementById('mode').innerHTML=g?'<b>🟠 RECUPERO</b>':'<b>🟢 NORMALE</b>';document.getElementById('modeCard').className='card '+(g?'recovery':'normal');document.getElementById('detail').textContent=g?'Recupero attivo. Al completamento verranno riattivati tutti gli stake originali.':'Seleziona partita e stake.';
 }
 function addRecord(name,match,value,result,pl,extra={}){data.trades.push({no:data.trades.length+1,weekend:data.weekendNo,stakeName:name,match,stakeValue:value,result,pl,time:new Date().toISOString(),...extra});}
@@ -89,10 +138,37 @@ function record(result){
  addRecord(s.name,matchName(m),before,result,pl);done(m);cashPoint(matchName(m));finish(snap,'Registrazione salvata.');
 }
 function showFusion(loser,m){const box=document.getElementById('fusionBox');box.classList.remove('hidden');const c=active().filter(s=>s.id!==loser.id&&s.status==='active');box.innerHTML=`<b>${esc(loser.name)} = LOSS.</b><div class="muted" style="margin:6px 0">Seleziona gli stake da unire; lo stake perso è incluso automaticamente.</div><div id="checks">${c.map(s=>`<label class="check"><input type="checkbox" value="${escAttr(s.id)}">${esc(s.name)} — ${money(s.value)}</label>`).join('')}</div><button type="button" id="confirmFusionBtn">Fondi gli stake selezionati</button>`;document.getElementById('confirmFusionBtn').addEventListener('click',()=>confirmFusion(loser.id,matchKey(m)));}
-function confirmFusion(loserId,mkey){const snap=snapshot(),loser=data.stakes.find(s=>s.id===loserId),ids=[...document.querySelectorAll('#checks input:checked')].map(x=>x.value);if(!loser||!ids.length){alert('Seleziona almeno uno stake.');return;}const members=[loserId,...ids],ms=data.stakes.filter(s=>members.includes(s.id)),total=ms.reduce((a,s)=>a+s.value,0),name=members.join('-');ms.forEach(s=>s.status='fused');const g={id:'G'+Date.now(),name:'Stake '+name,members,value:roundEuro(total),target:roundEuro(total),originalValues:ms.map(s=>({id:s.id,value:s.value})),active:true,trades:0,pl:0};data.groups.push(g);data.stakes.push({id:g.id,name:g.name,value:g.value,status:'group',trades:0,pl:0,groupId:g.id});addRecord(g.name,keyToMatch(mkey),g.value,'FUSIONE',0,{members});doneKey(mkey);finish(snap,'Fusione creata.');}
-function groupTrade(result,g,m){if(result==='LOSS'){showGroupLoss(g,m);return;}const snap=snapshot(),gs=data.stakes.find(s=>s.id===g.id),before=g.value,pl=result==='WIN'?roundEuro(g.value*RATE):0;if(result==='WIN'){g.value+=pl;g.pl+=pl;data.budget+=pl;gs.value=g.value;}g.trades++;addRecord(g.name,matchName(m),before,result,pl);done(m);if(result==='WIN'&&g.value>=g.target){const share=roundEuro(g.value/g.members.length);g.members.forEach(id=>{const s=data.stakes.find(x=>x.id===id);if(s){s.status='active';s.value=share;s.trades=0;s.pl=0;}});gs.status='fused';g.active=false;addRecord('SPLIT '+g.name,matchName(m),g.value,'SPLIT',0,{members:g.members});}cashPoint(matchName(m));finish(snap,g.active?'Registrazione salvata.':'Recupero completato e split eseguito.');}
+function confirmFusion(loserId,mkey){
+ const snap=snapshot(),loser=data.stakes.find(s=>s.id===loserId),ids=[...document.querySelectorAll('#checks input:checked')].map(x=>x.value);
+ if(!loser||!ids.length){alert('Seleziona almeno uno stake.');return;}
+ const members=[loserId,...ids],selected=data.stakes.filter(s=>ids.includes(s.id));
+ if(selected.length!==ids.length){alert('Selezione non valida.');return;}
+ const survivorTotal=roundEuro(selected.reduce((a,s)=>a+s.value,0));
+ const target=roundEuro(survivorTotal+loser.value);
+ const name=members.join('-');
+ [...data.stakes.filter(s=>members.includes(s.id))].forEach(s=>s.status='fused');
+ const g={id:'G'+Date.now(),name:'Stake '+name,members,value:survivorTotal,target,originalValues:data.stakes.filter(s=>members.includes(s.id)).map(s=>({id:s.id,value:s.value})),lossValue:roundEuro(loser.value),active:true,trades:0,pl:0,ruleVersion:'V5.1'};
+ data.groups.push(g);
+ data.stakes.push({id:g.id,name:g.name,value:g.value,status:'group',trades:0,pl:0,groupId:g.id});
+ // La LOSS è una registrazione reale e viene conteggiata nelle statistiche.
+ addRecord(loser.name,keyToMatch(mkey),loser.value,'LOSS',0,{members});
+ addRecord(g.name,keyToMatch(mkey),g.value,'FUSIONE',0,{members,target,lossValue:loser.value});
+ doneKey(mkey);finish(snap,'LOSS registrata. Recupero creato: '+money(g.value)+' da portare a '+money(g.target)+'.');
+}
+function groupTrade(result,g,m){if(result==='LOSS'){showGroupLoss(g,m);return;}const snap=snapshot(),gs=data.stakes.find(s=>s.id===g.id),before=g.value,pl=result==='WIN'?roundEuro(g.value*RATE):0;if(result==='WIN'){g.value+=pl;g.pl+=pl;data.budget+=pl;gs.value=g.value;}g.trades++;addRecord(g.name,matchName(m),before,result,pl);done(m);if(result==='WIN'&&g.value>=g.target){const splitValue=g.target;const share=roundEuro(splitValue/g.members.length);g.value=splitValue;gs.value=splitValue;g.members.forEach(id=>{const s=data.stakes.find(x=>x.id===id);if(s){s.status='active';s.value=share;s.trades=0;s.pl=0;}});gs.status='fused';g.active=false;addRecord('SPLIT '+g.name,matchName(m),splitValue,'SPLIT',0,{members:g.members,overshoot:roundEuro(Math.max(0, g.value+0-splitValue))});}cashPoint(matchName(m));finish(snap,g.active?'Registrazione salvata.':'Recupero completato e split eseguito.');}
 function showGroupLoss(g,m){const box=document.getElementById('fusionBox');box.classList.remove('hidden');const c=active().filter(s=>s.status==='active');box.innerHTML=`<b>${esc(g.name)} = LOSS durante il recupero.</b><div class="muted" style="margin:6px 0">Seleziona esattamente 4 stake da aggiungere alla nuova fusione.</div><div id="checks">${c.map(s=>`<label class="check"><input type="checkbox" value="${escAttr(s.id)}">${esc(s.name)} — ${money(s.value)}</label>`).join('')}</div><button type="button" id="confirmGroupLossBtn">Fondi 4 stake</button>`;document.getElementById('confirmGroupLossBtn').addEventListener('click',()=>confirmGroupLoss(g.id,matchKey(m)));}
-function confirmGroupLoss(gid,mkey){const snap=snapshot(),g=data.groups.find(x=>x.id===gid&&x.active),ids=[...document.querySelectorAll('#checks input:checked')].map(x=>x.value);if(!g||ids.length!==4){alert('Seleziona esattamente 4 stake.');return;}const members=[...g.members,...ids],ms=data.stakes.filter(s=>members.includes(s.id)),total=g.value+ms.reduce((a,s)=>a+s.value,0);ms.forEach(s=>s.status='fused');const old=data.stakes.find(s=>s.id===g.id);if(old)old.status='fused';g.active=false;const ng={id:'G'+Date.now(),name:'Stake '+members.join('-'),members,value:roundEuro(total),target:roundEuro(total),originalValues:ms.map(s=>({id:s.id,value:s.value})),active:true,trades:0,pl:0,previousGroup:gid};data.groups.push(ng);data.stakes.push({id:ng.id,name:ng.name,value:ng.value,status:'group',trades:0,pl:0,groupId:ng.id});addRecord(ng.name,keyToMatch(mkey),ng.value,'FUSIONE',0,{members,previousGroup:gid});doneKey(mkey);finish(snap,'Nuova fusione creata.');}
+function confirmGroupLoss(gid,mkey){
+ const snap=snapshot(),g=data.groups.find(x=>x.id===gid&&x.active),ids=[...document.querySelectorAll('#checks input:checked')].map(x=>x.value);
+ if(!g||ids.length!==4){alert('Seleziona esattamente 4 stake.');return;}
+ const members=[...g.members,...ids],ms=data.stakes.filter(s=>ids.includes(s.id));
+ if(ms.length!==4){alert('Selezione non valida.');return;}
+ const total=roundEuro(g.value+ms.reduce((a,s)=>a+s.value,0));
+ ms.forEach(s=>s.status='fused');const old=data.stakes.find(s=>s.id===g.id);if(old)old.status='fused';g.active=false;
+ const ng={id:'G'+Date.now(),name:'Stake '+members.join('-'),members,value:total,target:total,originalValues:ms.map(s=>({id:s.id,value:s.value})),active:true,trades:0,pl:0,previousGroup:gid};
+ data.groups.push(ng);data.stakes.push({id:ng.id,name:ng.name,value:ng.value,status:'group',trades:0,pl:0,groupId:ng.id});
+ addRecord(g.name,keyToMatch(mkey),g.value,'LOSS',0,{members:g.members,previousGroup:gid});
+ addRecord(ng.name,keyToMatch(mkey),ng.value,'FUSIONE',0,{members,previousGroup:gid});doneKey(mkey);finish(snap,'LOSS registrata. Nuova fusione creata.');
+}
 function withdraw(){let v=prompt('Importo da prelevare dalla cassa?','10');if(v===null)return;v=Math.round(Number(String(v).replace(',','.')));if(!Number.isFinite(v)||v<=0){alert('Inserisci un importo valido.');return;}if(v>data.budget){alert('Non puoi prelevare più della cassa disponibile.');return;}const snap=snapshot();data.budget-=v;data.withdrawn+=v;addRecord('CASSA','Prelievo',v,'PRELIEVO',-v);cashPoint('Prelievo -'+money(v));finish(snap,'Prelievo registrato.');}
 function undo(){if(!data.undoSnapshot){alert('Non c’è una registrazione da annullare.');return;}data=normalize(JSON.parse(JSON.stringify(data.undoSnapshot)));delete data.undoSnapshot;save();render();loadMatches();msg('Ultima registrazione annullata.');}
 function drawChart(){const c=document.getElementById('cashChart');if(!c)return;const d=data.cashHistory&&data.cashHistory.length?data.cashHistory:[{label:'Inizio',cash:data.budget}],w=Math.max(300,c.clientWidth||800),h=260,ratio=window.devicePixelRatio||1;c.width=w*ratio;c.height=h*ratio;const ctx=c.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w,h);let vals=d.map(x=>Number(x.cash)||0),min=Math.min(...vals),max=Math.max(...vals);if(min===max){min-=5;max+=5;}const pad=38,range=max-min,step=(w-2*pad)/Math.max(1,d.length-1);ctx.font='11px Arial';ctx.strokeStyle='#d1d5db';ctx.fillStyle='#6b7280';for(let i=0;i<5;i++){const y=pad+(h-2*pad)*i/4,val=max-range*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();ctx.fillText(money(val),3,y+4);}ctx.beginPath();d.forEach((p,i)=>{const x=pad+step*i,y=pad+(h-2*pad)*(max-(Number(p.cash)||0))/range;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.strokeStyle='#111827';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#111827';d.forEach((p,i)=>{const x=pad+step*i,y=pad+(h-2*pad)*(max-(Number(p.cash)||0))/range;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});}
