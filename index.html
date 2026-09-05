@@ -38,6 +38,46 @@
 'use strict';
 const KEY='over05TrackerV4', LEGACY_KEYS=['over05TrackerV5'], INITIAL=100, RATE=0.10;
 let data=loadData(), matches=[];
+// Ripara automaticamente i vecchi record LOSS salvati con P/L=0 e riallinea la cassa.
+function repairLossAccounting(d){
+  const records=[];
+  (d.weekends||[]).forEach(w=>{if(Array.isArray(w.trades)) records.push(...w.trades);});
+  if(Array.isArray(d.trades)) records.push(...d.trades);
+  let changed=false;
+  records.forEach(t=>{
+    if(t.result==='LOSS' && Number(t.pl)===0){
+      const v=Math.abs(Number(t.stakeValue)||0);
+      if(v>0){t.pl=-v;changed=true;}
+    }
+  });
+  // La cassa è il capitale iniziale + tutti i P/L reali, comprese le LOSS e i prelievi.
+  const totalPL=records.reduce((a,t)=>a+(Number(t.pl)||0),0);
+  const repairedCash=Number(d.initialBudget)||INITIAL;
+  const newBudget=Math.round((repairedCash+totalPL)*100)/100;
+  if(Math.abs(Number(d.budget)-newBudget)>0.001){d.budget=newBudget;changed=true;}
+  // Riallinea i totali dei weekend senza eliminare alcuna registrazione.
+  let running=Number(d.initialBudget)||INITIAL;
+  (d.weekends||[]).forEach(w=>{
+    const arr=Array.isArray(w.trades)?w.trades:[];
+    w.start=running;
+    running+=arr.reduce((a,t)=>a+(Number(t.pl)||0),0);
+    w.budgetEnd=running;
+  });
+  const cur=Array.isArray(d.trades)?d.trades:[];
+  d.weekendStart=running;
+  if(cur.length){
+    d.weekendStart=running;
+    running+=cur.reduce((a,t)=>a+(Number(t.pl)||0),0);
+  }
+  if(changed){
+    const all=records.filter(t=>t.time).sort((a,b)=>new Date(a.time)-new Date(b.time));
+    d.cashHistory=[{label:'Inizio',cash:Number(d.initialBudget)||INITIAL}];
+    let cash=Number(d.initialBudget)||INITIAL;
+    all.forEach(t=>{cash+=Number(t.pl)||0;d.cashHistory.push({label:t.match||t.stakeName||t.result,cash:Math.round(cash*100)/100});});
+  }
+  return d;
+}
+
 function fresh(){return {initialBudget:INITIAL,budget:INITIAL,withdrawn:0,weekendNo:1,weekendStart:INITIAL,stakes:Array.from({length:10},(_,i)=>({id:String(i+1),name:'Stake '+(i+1),value:10,status:'active',trades:0,pl:0})),trades:[],groups:[],weekends:[],completedMatches:[],cashHistory:[{label:'Inizio',cash:INITIAL}]};}
 function normalize(d){
  if(!d||!Array.isArray(d.stakes)) return fresh();
@@ -50,8 +90,8 @@ function normalize(d){
 }
 function loadData(){
  try{
-  const old=localStorage.getItem(KEY); if(old){const d=migrateV5Data(normalize(JSON.parse(old))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}
-  for(const k of LEGACY_KEYS){const raw=localStorage.getItem(k); if(raw){const d=migrateV5Data(normalize(JSON.parse(raw))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}}
+  const old=localStorage.getItem(KEY); if(old){const d=repairLossAccounting(migrateV5Data(normalize(JSON.parse(old)))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}
+  for(const k of LEGACY_KEYS){const raw=localStorage.getItem(k); if(raw){const d=repairLossAccounting(migrateV5Data(normalize(JSON.parse(raw)))); localStorage.setItem(KEY,JSON.stringify(d)); return d;}}
  }catch(e){}
  return fresh();
 }
@@ -71,7 +111,7 @@ function migrateV5Data(d){
       g.value=roundEuro(survivor);
       g.target=roundEuro(all);
       g.lossValue=roundEuro(first.value);
-      g.ruleVersion='V5.1';
+      g.ruleVersion='V5.2';
       const gs=d.stakes.find(x=>x.id===g.id);
       if(gs) gs.value=g.value;
     }
@@ -147,11 +187,12 @@ function confirmFusion(loserId,mkey){
  const target=roundEuro(survivorTotal+loser.value);
  const name=members.join('-');
  [...data.stakes.filter(s=>members.includes(s.id))].forEach(s=>s.status='fused');
- const g={id:'G'+Date.now(),name:'Stake '+name,members,value:survivorTotal,target,originalValues:data.stakes.filter(s=>members.includes(s.id)).map(s=>({id:s.id,value:s.value})),lossValue:roundEuro(loser.value),active:true,trades:0,pl:0,ruleVersion:'V5.1'};
+ const g={id:'G'+Date.now(),name:'Stake '+name,members,value:survivorTotal,target,originalValues:data.stakes.filter(s=>members.includes(s.id)).map(s=>({id:s.id,value:s.value})),lossValue:roundEuro(loser.value),active:true,trades:0,pl:0,ruleVersion:'V5.2'};
  data.groups.push(g);
  data.stakes.push({id:g.id,name:g.name,value:g.value,status:'group',trades:0,pl:0,groupId:g.id});
  // La LOSS è una registrazione reale e viene conteggiata nelle statistiche.
- addRecord(loser.name,keyToMatch(mkey),loser.value,'LOSS',0,{members});
+ data.budget-=loser.value;
+ addRecord(loser.name,keyToMatch(mkey),loser.value,'LOSS',-loser.value,{members});
  addRecord(g.name,keyToMatch(mkey),g.value,'FUSIONE',0,{members,target,lossValue:loser.value});
  doneKey(mkey);finish(snap,'LOSS registrata. Recupero creato: '+money(g.value)+' da portare a '+money(g.target)+'.');
 }
@@ -166,7 +207,8 @@ function confirmGroupLoss(gid,mkey){
  ms.forEach(s=>s.status='fused');const old=data.stakes.find(s=>s.id===g.id);if(old)old.status='fused';g.active=false;
  const ng={id:'G'+Date.now(),name:'Stake '+members.join('-'),members,value:total,target:total,originalValues:ms.map(s=>({id:s.id,value:s.value})),active:true,trades:0,pl:0,previousGroup:gid};
  data.groups.push(ng);data.stakes.push({id:ng.id,name:ng.name,value:ng.value,status:'group',trades:0,pl:0,groupId:ng.id});
- addRecord(g.name,keyToMatch(mkey),g.value,'LOSS',0,{members:g.members,previousGroup:gid});
+ data.budget-=g.value;
+ addRecord(g.name,keyToMatch(mkey),g.value,'LOSS',-g.value,{members:g.members,previousGroup:gid});
  addRecord(ng.name,keyToMatch(mkey),ng.value,'FUSIONE',0,{members,previousGroup:gid});doneKey(mkey);finish(snap,'LOSS registrata. Nuova fusione creata.');
 }
 function withdraw(){let v=prompt('Importo da prelevare dalla cassa?','10');if(v===null)return;v=Math.round(Number(String(v).replace(',','.')));if(!Number.isFinite(v)||v<=0){alert('Inserisci un importo valido.');return;}if(v>data.budget){alert('Non puoi prelevare più della cassa disponibile.');return;}const snap=snapshot();data.budget-=v;data.withdrawn+=v;addRecord('CASSA','Prelievo',v,'PRELIEVO',-v);cashPoint('Prelievo -'+money(v));finish(snap,'Prelievo registrato.');}
