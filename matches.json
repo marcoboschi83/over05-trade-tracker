@@ -1,9 +1,14 @@
 [
-  {"date":"2026-08-30","time":"15:00","league":"Premier League","home":"Chelsea","away":"Brighton"},
-  {"date":"2026-08-30","time":"15:00","league":"Premier League","home":"Leeds","away":"Brentford"},
-  {"date":"2026-08-30","time":"15:00","league":"Premier League","home":"Sunderland","away":"Fulham"},
-  {"date":"2026-08-30","time":"17:15","league":"Ligue 1","home":"Rennes","away":"Le Mans"},
-  {"date":"2026-08-30","time":"17:30","league":"Premier League","home":"Manchester United","away":"Ipswich"},
-  {"date":"2026-08-30","time":"20:45","league":"Serie A","home":"Cagliari","away":"Inter"},
-  {"date":"2026-08-30","time":"20:45","league":"Serie A","home":"Lazio","away":"Genoa"}
+  {"league":"Premier League","home":"Brentford","away":"Sunderland","date":"2026-09-05","time":"16:00","probability":"94.8%","status":"PASS"},
+  {"league":"Premier League","home":"Brighton","away":"Leeds","date":"2026-09-05","time":"16:00","probability":"95.8%","status":"PASS"},
+  {"league":"Premier League","home":"Fulham","away":"Crystal Palace","date":"2026-09-05","time":"16:00","probability":"94.9%","status":"PASS"},
+  {"league":"Premier League","home":"Manchester City","away":"Coventry","date":"2026-09-05","time":"16:00","probability":"91.8%","status":"PASS"},
+  {"league":"Premier League","home":"Nottingham Forest","away":"Tottenham","date":"2026-09-05","time":"16:00","probability":"95.6%","status":"PASS"},
+  {"league":"Bundesliga","home":"Hoffenheim","away":"Dortmund","date":"2026-09-05","time":"15:30","probability":"95.6%","status":"PASS"},
+  {"league":"Bundesliga","home":"Schalke","away":"Bayern","date":"2026-09-05","time":"18:30","probability":"98.9%","status":"PASS"},
+  {"league":"Serie A","home":"Inter","away":"Napoli","date":"2026-09-05","time":"18:00","probability":"93.7%","status":"PASS"},
+  {"league":"La Liga","home":"Athletic Bilbao","away":"Atlético Madrid","date":"2026-09-05","time":"16:15","probability":"94.5%","status":"PASS"},
+  {"league":"La Liga","home":"Rayo Vallecano","away":"Racing Santander","date":"2026-09-05","time":"18:30","probability":"95.3%","status":"PASS"},
+  {"league":"Ligue 1","home":"Lens","away":"Lorient","date":"2026-09-05","time":"17:15","probability":"98.3%","status":"PASS"},
+  {"league":"Ligue 1","home":"Nice","away":"Le Mans","date":"2026-09-05","time":"20:45","probability":"97.8%","status":"PASS*"}
 ]
