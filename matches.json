@@ -1,47 +1,11 @@
 [
   {
-    "league": "Premier League",
-    "home": "Everton",
-    "away": "Manchester United",
-    "date": "2026-09-06",
-    "time": "17:30",
-    "probability": "97.9%",
-    "status": "PASS"
-  },
-  {
-    "league": "Bundesliga",
-    "home": "Eintracht Frankfurt",
-    "away": "Augsburg",
-    "date": "2026-09-06",
-    "time": "15:30",
-    "probability": "98.7%",
-    "status": "PASS"
-  },
-  {
-    "league": "Premier League",
-    "home": "Arsenal",
-    "away": "Chelsea",
-    "date": "2026-09-06",
-    "time": "16:00",
-    "probability": "95.0%",
-    "status": "PASS"
-  },
-  {
     "league": "La Liga",
-    "home": "Valencia",
-    "away": "Barcelona",
-    "date": "2026-09-06",
+    "home": "Elche",
+    "away": "Real Sociedad",
+    "date": "2026-09-07",
     "time": "21:00",
-    "probability": "94.3%",
+    "probability": "94.2%",
     "status": "PASS"
-  },
-  {
-    "league": "Ligue 1",
-    "home": "Troyes",
-    "away": "Strasbourg",
-    "date": "2026-09-06",
-    "time": "17:15",
-    "probability": "95.7%",
-    "status": "ALERT"
   }
 ]
